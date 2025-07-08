@@ -6,7 +6,9 @@
 #include <telemetry.hpp>
 
 UnitRollerI2C RollerI2C_RIGHT;  // Create a UNIT_ROLLERI2C object
+UnitRollerI2C RollerI2C_RIGHT2;
 UnitRollerI2C RollerI2C_LEFT;
+UnitRollerI2C RollerI2C_LEFT2;
 //I2Cドライバの多重初期化を防ぐためのフラグ
 bool UnitRollerI2C::initialized = false;
 
@@ -15,14 +17,19 @@ float Gyro_x, Gyro_y, Gyro_z;
 float Acc_x, Acc_y, Acc_z;
 int32_t Imu_time,_Imu_time, Imu_dtime;
 int32_t Current_ref_r, Current_ref_l;
+int32_t Current_ref_r2, Current_ref_l2;
 int32_t Current_r, Current_l;
+int32_t Current_r2, Current_l2;
 int32_t Pos_r, Pos_l, Pos_bias_r, Pos_bias_l;
+int32_t Pos_r2, Pos_l2, Pos_bias_r2, Pos_bias_l2;
 int32_t Speed_r, Speed_l;
+int32_t Speed_r2, Speed_l2;
 int32_t Voltage_r,Voltage_l;
+int32_t Voltage_r2,Voltage_l2;
 int32_t St, _St, Et, Dt;
 float f1,f2,f3,f4;
 float k1;
-float U0, U_yaw, U_v;
+float U0, U_yaw, U_v, U_l;
 uint8_t Start_flag = 0;
 uint8_t Stay_flag = 0;
 //TaskHandle_t xHandle = NULL;
@@ -52,10 +59,10 @@ void dummyTask(void *pvParameters) {
             delay(500); //チャタリング防止
         }
 
-        f4 = -3.0;
+        f4 = -5.0; //-3.0;
 
-        if(Stick[ALTCONTROLMODE] < -0.9){ //左ボタンでトグル
-            Stay_flag = !Stay_flag;
+        if(Stick[ALTCONTROLMODE] > 0.9){ //左ボタンでトグル
+            Stay_flag = !Stay_flag; //元の位置に戻ろうとする
             if(Stay_flag == true){
                 Pos_bias_r = Pos_r;
                 Pos_bias_l = Pos_l;
@@ -67,33 +74,19 @@ void dummyTask(void *pvParameters) {
         }
 
         if(Stick[THROTTLE] > 0.9){ //THROTTLE上でRoll_bias UP
-            Roll_bias = Roll_bias + 0.2;
-            delay(100); //連続up
+            Roll_bias = Roll_bias - 0.2;
+            delay(100); //連続up　前進
         }
 
         if(Stick[THROTTLE] < -0.9){ //THROTTLE下でRoll_bias Down
-            Roll_bias = Roll_bias - 0.2;
-            delay(100); //連続down
+            Roll_bias = Roll_bias + 0.2;
+            delay(100); //連続down　後進
         }
 
         if(Roll < -70 or Roll > 70){ //転倒したらOFF
             Start_flag = 0;
         }
 
-        // TelemetryData.Roll = Roll;
-        // TelemetryData.Pitch = Pitch_ahrs;
-        // TelemetryData.Yaw = Yaw_ahrs;
-        // TelemetryData.RollRate = Gyro_x;
-        // TelemetryData.PitchRate = Gyro_y;
-        // TelemetryData.YawRate = Gyro_z;
-        // TelemetryData.CurrentR = (float)Current_r/100.0;
-        // TelemetryData.CurrentL = (float)Current_l/100.0;
-        // TelemetryData.CurrentRefR = (float)Current_ref_r/100.0;
-        // TelemetryData.CurrentRefL = (float)Current_ref_l/100.0;
-        // TelemetryData.PosR = (float)Pos_r/100.0;
-        // TelemetryData.PosL = (float)Pos_l/100.0;
-        // TelemetryData.SpeedR = (float)Pos_bias_r/100.0;
-        // TelemetryData.SpeedL = (float)Pos_bias_l/100.0;
         TelemetryData.VoltageR = (float)Voltage_r/100.0;
         // TelemetryData.Dt = (float)Dt/1.0e3;
 
@@ -124,45 +117,71 @@ void taskFunction(void *pvParameters) {
         MadgwickAHRSupdateIMU(Gyro_x * DEG_TO_RAD, Gyro_y * DEG_TO_RAD, Gyro_z * DEG_TO_RAD, Acc_x, Acc_y, Acc_z, &Pitch_ahrs, &Roll_ahrs, &Yaw_ahrs);
         k1 = 0.3;
         Roll = k1*Roll +(1-k1)*Roll_ahrs;
+
         Current_r =  RollerI2C_RIGHT.getCurrentReadback();
+        Current_r2 =  -RollerI2C_RIGHT2.getCurrentReadback();
         Current_l = -RollerI2C_LEFT.getCurrentReadback();
+        Current_l2 = RollerI2C_LEFT2.getCurrentReadback();
         Pos_r =  RollerI2C_RIGHT.getPosReadback();
+        Pos_r2 =  -RollerI2C_RIGHT2.getPosReadback();
         Pos_l = -RollerI2C_LEFT.getPosReadback();
+        Pos_l2 = RollerI2C_LEFT2.getPosReadback();
         Speed_r =  RollerI2C_RIGHT.getSpeedReadback();
+        Speed_r2 =  -RollerI2C_RIGHT2.getSpeedReadback();
         Speed_l = -RollerI2C_LEFT.getSpeedReadback();
+        Speed_l2 = RollerI2C_LEFT2.getSpeedReadback();
         Voltage_r = RollerI2C_RIGHT.getVin();
         //Voltage_l = RollerI2C_LEFT.getVin();
 
         // current control
         if(Start_flag==1){
             f1 = 7500;//カオナシ5000　7500.0;//4200.0;//振子の角度に比例して電流を制御
-            f2 = 200.0;//カオナシ200.0　200.0;//振子の角速度に比例して電流を制御
+            f2 = 300.0;//カオナシ200.0　200.0;//振子の角速度に比例して電流を制御
             // f3 = 0.0;//-3.0;//モータの角度に比例して電流を制御 0.1
             // f4 = 0.0;//-5.0;//モータの角速度に比例して電流を制御
             float a = Stick[RUDDER];
             if( a > -0.05 and a < 0.05){a = 0.0;} //dead band
-            float b = -Stick[ELEVATOR];
+            float b = Stick[ELEVATOR];
+            float c = Stick[AILERON];
             if( b > -0.05 and b < 0.05){b = 0.0;} //dead band
+            if( c > -0.05 and c < 0.05){c = 0.0;} //dead band
             float yaw_ref = -360.0 * a; 
             float yaw_err = yaw_ref - Gyro_z;
-            U_yaw = yaw_err * 300.0;
-            U_v = b * 200000.0; 
+            U_yaw = yaw_err * 300.0; //回転
+            U_v = b * 200000.0; //前後移動 ELEVATOR
+            U_l = c * 100000.0; //左右移動 AILERON
+            float C_yaw = c * 360.0 * 180.0; //左右移動時の回転補正
             //State feedback control
-            U0 = (-f1 * (Roll - Roll_bias) - f2 * Gyro_x - f3 * (float)(Pos_r - Pos_bias_r + Pos_l - Pos_bias_l)/2.0 - f4 * (Speed_r + Speed_l)/2.0 );
-            Current_ref_r = (int32_t)(U0 + U_v + U_yaw);
-            Current_ref_l = (int32_t)(U0 + U_v - U_yaw);
+            U0 = (-f1 * (Roll - Roll_bias) 
+                 - f2 * Gyro_x 
+                 - f3 * (float)(Pos_r - Pos_bias_r + Pos_l - Pos_bias_l)/2.0 
+                 - f4 * (Speed_r + Speed_l + Speed_r2 + Speed_l2)/4.0 );
+
+            Current_ref_r = (int32_t)(U0 + U_v + U_yaw * 0.7 + U_l + C_yaw * 0.7);
+            Current_ref_r2 = (int32_t)(U0 + U_v + U_yaw - U_l + C_yaw);
+            Current_ref_l = (int32_t)(U0 + U_v - U_yaw * 0.7 - U_l - C_yaw * 0.7);
+            Current_ref_l2 = (int32_t)(U0 + U_v - U_yaw + U_l - C_yaw);
+
             //limit current
             if (Current_ref_r>120000)Current_ref_r=120000;
             else if (Current_ref_r<-120000)Current_ref_r=-120000;
             if (Current_ref_l>120000)Current_ref_l=120000;
             else if (Current_ref_l<-120000)Current_ref_l=-120000;
+            if (Current_ref_r2>120000)Current_ref_r2=120000;
+            else if (Current_ref_r2<-120000)Current_ref_r2=-120000;
+            if (Current_ref_l2>120000)Current_ref_l2=120000;
+            else if (Current_ref_l2<-120000)Current_ref_l2=-120000;
 
             RollerI2C_RIGHT.setCurrent(Current_ref_r);
+            RollerI2C_RIGHT2.setCurrent(-Current_ref_r2);
             RollerI2C_LEFT.setCurrent(-Current_ref_l);
+            RollerI2C_LEFT2.setCurrent(Current_ref_l2);
         }
         else{
             RollerI2C_RIGHT.setCurrent(0);
+            RollerI2C_RIGHT2.setCurrent(0);
             RollerI2C_LEFT.setCurrent(0);
+            RollerI2C_LEFT2.setCurrent(0);
         }
         Et = micros();
         Dt = Et - St;
@@ -193,6 +212,18 @@ void setup(){
     else{
         printf("RollerI2C_LEFT begin failed\n");
     }
+    if(RollerI2C_RIGHT2.begin(0x66, 2, 1, 400000)==true){
+        printf("RollerI2C_RIGHT2 begin success\n");
+    }
+    else{
+        printf("RollerI2C_RIGHT2 begin failed\n");
+    }
+    if(RollerI2C_LEFT2.begin(0x67, 2, 1, 400000)==true){
+        printf("RollerI2C_LEFT2 begin success\n");
+    }
+    else{
+        printf("RollerI2C_LEFT2 begin failed\n");
+    }
 
     RollerI2C_RIGHT.setMode(3);
     RollerI2C_LEFT.setMode(3);
@@ -200,6 +231,13 @@ void setup(){
     RollerI2C_LEFT.setCurrent(0);
     RollerI2C_RIGHT.setOutput(1);
     RollerI2C_LEFT.setOutput(1);
+
+    RollerI2C_RIGHT2.setMode(3);
+    RollerI2C_LEFT2.setMode(3);
+    RollerI2C_RIGHT2.setCurrent(0);
+    RollerI2C_LEFT2.setCurrent(0);
+    RollerI2C_RIGHT2.setOutput(1);
+    RollerI2C_LEFT2.setOutput(1);
     delay(1000);
 
 
