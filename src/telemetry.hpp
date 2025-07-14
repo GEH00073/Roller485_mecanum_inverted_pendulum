@@ -28,23 +28,9 @@
 #include <stdint.h>
 
 typedef struct {
-    // float Roll;
-    // float Pitch;
-    // float Yaw;
-    // float RollRate;
-    // float PitchRate;
-    // float YawRate;
-    // float CurrentRefR;
-    // float CurrentRefL;
-    // float CurrentR;
-    // float CurrentL;
-    // float PosR;
-    // float PosL;
-    // float SpeedR;
-    // float SpeedL;
     float VoltageR;
-    // float VoltageL;
-    // float Dt;
+    float mode;
+    //データ項目をここに追加する
 } TelemetryData_t;
 
 

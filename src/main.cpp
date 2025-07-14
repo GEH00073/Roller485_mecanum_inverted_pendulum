@@ -31,7 +31,8 @@ float f1,f2,f3,f4;
 float k1;
 float U0, U_yaw, U_v, U_l;
 uint8_t Start_flag = 0;
-uint8_t Stay_flag = 0;
+bool mode_flag = false;
+float yaw, angle, start_yaw, target_yaw, diff;
 //TaskHandle_t xHandle = NULL;
 
 void dummyTask(void *pvParameters) {
@@ -42,11 +43,11 @@ void dummyTask(void *pvParameters) {
         //Current_r, Current_l, (float)Pos_r/100.0, (float)Pos_l/100.0, (float)Speed_r/100.0, (float)Speed_l/100.0);
 
         M5.Display.setCursor(0, 10);
-        M5.Display.printf("%5.1f", Roll);
-        M5.Display.setCursor(0, 50);
-        M5.Display.printf("%4.1fV", (float)Voltage_r/100.0);
-        M5.Display.setCursor(0, 90);
-        M5.Display.printf("%4.1f", (float)Dt/1.0e3);
+        M5.Display.printf("roll %4.1f\n", Roll);
+        M5.Display.printf("V    %4.1f\n", (float)Voltage_r/100.0);
+        M5.Display.printf("dt   %4.1f\n", (float)Dt/1.0e3);
+        M5.Display.printf("yaw  %4.1f\n", (float)target_yaw);
+        M5.Display.printf("diff %4.1f\n", (float)diff);
 
         M5.update();
         // if(M5.BtnA.wasPressed())
@@ -56,31 +57,30 @@ void dummyTask(void *pvParameters) {
             Roll_bias = Roll;
             Pos_bias_r = Pos_r;
             Pos_bias_l = Pos_l;
+            start_yaw = -Yaw_ahrs;
+            target_yaw = 0; 
             delay(500); //チャタリング防止
         }
 
         f4 = -5.0; //-3.0;
 
         if(Stick[ALTCONTROLMODE] > 0.9){ //左ボタンでトグル
-            Stay_flag = !Stay_flag; //元の位置に戻ろうとする
-            if(Stay_flag == true){
-                Pos_bias_r = Pos_r;
-                Pos_bias_l = Pos_l;
-                f3 = -3.0;
-            }else{
-                f3 = 0.0;
+            mode_flag = !mode_flag; //true = nomal  false = drift
+            if(mode_flag == true){
+                start_yaw = -Yaw_ahrs;
+                target_yaw = 0; 
             }
             delay(500); //チャタリング防止
         }
 
         if(Stick[THROTTLE] > 0.9){ //THROTTLE上でRoll_bias UP
             Roll_bias = Roll_bias - 0.2;
-            delay(100); //連続up　前進
+            delay(100); //連続up　前傾
         }
 
         if(Stick[THROTTLE] < -0.9){ //THROTTLE下でRoll_bias Down
             Roll_bias = Roll_bias + 0.2;
-            delay(100); //連続down　後進
+            delay(100); //連続down　後傾
         }
 
         if(Roll < -70 or Roll > 70){ //転倒したらOFF
@@ -88,7 +88,8 @@ void dummyTask(void *pvParameters) {
         }
 
         TelemetryData.VoltageR = (float)Voltage_r/100.0;
-        // TelemetryData.Dt = (float)Dt/1.0e3;
+        TelemetryData.mode = (float)mode_flag;
+        //telemetry.hppにデータ項目を追加する
 
         telemetry();
     }
@@ -114,6 +115,7 @@ void taskFunction(void *pvParameters) {
         Acc_x = imudata.accel.x;
         Acc_y = imudata.accel.y;
         Acc_z = imudata.accel.z;
+        
         MadgwickAHRSupdateIMU(Gyro_x * DEG_TO_RAD, Gyro_y * DEG_TO_RAD, Gyro_z * DEG_TO_RAD, Acc_x, Acc_y, Acc_z, &Pitch_ahrs, &Roll_ahrs, &Yaw_ahrs);
         k1 = 0.3;
         Roll = k1*Roll +(1-k1)*Roll_ahrs;
@@ -135,32 +137,51 @@ void taskFunction(void *pvParameters) {
 
         // current control
         if(Start_flag==1){
-            f1 = 7500;//カオナシ5000　7500.0;//4200.0;//振子の角度に比例して電流を制御
-            f2 = 300.0;//カオナシ200.0　200.0;//振子の角速度に比例して電流を制御
+            f1 = 7000; //4200.0;//振子の角度に比例して電流を制御
+            f2 = 250.0; //200.0;//振子の角速度に比例して電流を制御
             // f3 = 0.0;//-3.0;//モータの角度に比例して電流を制御 0.1
             // f4 = 0.0;//-5.0;//モータの角速度に比例して電流を制御
             float a = Stick[RUDDER];
-            if( a > -0.05 and a < 0.05){a = 0.0;} //dead band
-            float b = Stick[ELEVATOR];
+            float b = -Stick[ELEVATOR];
             float c = Stick[AILERON];
+            if( a > -0.05 and a < 0.05){a = 0.0;} //dead band
             if( b > -0.05 and b < 0.05){b = 0.0;} //dead band
             if( c > -0.05 and c < 0.05){c = 0.0;} //dead band
-            float yaw_ref = -360.0 * a; 
+
+            if(mode_flag == true){ //drift mode
+                // float angle_rad = angle * PI / 180.0;
+                float angle_rad = target_yaw * PI / 180.0;
+                // 回転計算
+                float x1 = c * cos(angle_rad) - b * sin(angle_rad);
+                float y1 = c * sin(angle_rad) + b * cos(angle_rad);
+                c = x1 / 2.0;
+                b = y1;
+
+                target_yaw += a * 1;
+                if(target_yaw > 360) target_yaw -= 360;
+                if(target_yaw < 0) target_yaw += 360;
+                diff = -Yaw_ahrs - start_yaw - target_yaw;
+                if(diff > 180) diff -= 360;
+                if(diff < -180) diff += 360;
+                a = -diff / 10;
+            }
+
+            float yaw_ref = -360.0 * a / 2; 
             float yaw_err = yaw_ref - Gyro_z;
             U_yaw = yaw_err * 300.0; //回転
-            U_v = b * 200000.0; //前後移動 ELEVATOR
+            U_v = -b * 100000.0; //200000.0; //前後移動 ELEVATOR
             U_l = c * 100000.0; //左右移動 AILERON
-            float C_yaw = c * 360.0 * 180.0; //左右移動時の回転補正
+            float C_yaw = c * 60000.0; //左右移動時の回転モーメント補正
             //State feedback control
             U0 = (-f1 * (Roll - Roll_bias) 
                  - f2 * Gyro_x 
                  - f3 * (float)(Pos_r - Pos_bias_r + Pos_l - Pos_bias_l)/2.0 
                  - f4 * (Speed_r + Speed_l + Speed_r2 + Speed_l2)/4.0 );
 
-            Current_ref_r = (int32_t)(U0 + U_v + U_yaw * 0.7 + U_l + C_yaw * 0.7);
-            Current_ref_r2 = (int32_t)(U0 + U_v + U_yaw - U_l + C_yaw);
-            Current_ref_l = (int32_t)(U0 + U_v - U_yaw * 0.7 - U_l - C_yaw * 0.7);
-            Current_ref_l2 = (int32_t)(U0 + U_v - U_yaw + U_l - C_yaw);
+            Current_ref_r  = (int32_t)(U0 + U_v + U_yaw * 0.6 + U_l + C_yaw);
+            Current_ref_r2 = (int32_t)(U0 + U_v + U_yaw       - U_l + C_yaw);
+            Current_ref_l  = (int32_t)(U0 + U_v - U_yaw * 0.6 - U_l - C_yaw);
+            Current_ref_l2 = (int32_t)(U0 + U_v - U_yaw       + U_l - C_yaw);
 
             //limit current
             if (Current_ref_r>120000)Current_ref_r=120000;
@@ -194,31 +215,29 @@ void setup(){
     Roll_bias = 0.0;
     auto cfg = M5.config();     
     M5.begin(cfg);
-    M5.Display.setTextSize(4);               // テキストサイズを変更
-    //M5.Display.setCursor(0, 20);
-    //M5.Display.printf("%5.1f", Roll_ahrs);       // 画面にHello World!!と1行表示
+    M5.Display.setTextSize(2);               // テキストサイズを変更
     rc_init();
-    delay(2000);
+    delay(1000);
     printf("Start\n");
-    if(RollerI2C_RIGHT.begin(0x64, 2, 1, 400000)==true){
+    if(RollerI2C_RIGHT.begin(0x64, 8, 7, 400000)==true){
         printf("RollerI2C_RIGHT begin success\n");
     }
     else{
         printf("RollerI2C_RIGHT begin failed\n");
     }
-    if(RollerI2C_LEFT.begin(0x65, 2, 1, 400000)==true){
+    if(RollerI2C_LEFT.begin(0x65, 8, 7, 400000)==true){
         printf("RollerI2C_LEFT begin success\n");
     }
     else{
         printf("RollerI2C_LEFT begin failed\n");
     }
-    if(RollerI2C_RIGHT2.begin(0x66, 2, 1, 400000)==true){
+    if(RollerI2C_RIGHT2.begin(0x66, 8, 7, 400000)==true){
         printf("RollerI2C_RIGHT2 begin success\n");
     }
     else{
         printf("RollerI2C_RIGHT2 begin failed\n");
     }
-    if(RollerI2C_LEFT2.begin(0x67, 2, 1, 400000)==true){
+    if(RollerI2C_LEFT2.begin(0x67, 8, 7, 400000)==true){
         printf("RollerI2C_LEFT2 begin success\n");
     }
     else{
@@ -238,7 +257,7 @@ void setup(){
     RollerI2C_LEFT2.setCurrent(0);
     RollerI2C_RIGHT2.setOutput(1);
     RollerI2C_LEFT2.setOutput(1);
-    delay(1000);
+    // delay(1000);
 
 
     // FreeRTOSタスクの作成

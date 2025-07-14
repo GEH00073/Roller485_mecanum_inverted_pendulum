@@ -35,6 +35,8 @@ volatile static float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;	// quaternion 
 
 static float invSqrt(float x);
 
+static float prev_pitch = 0, prev_roll = 0, prev_yaw = 0;
+
 //====================================================================================================
 // Functions
 
@@ -42,8 +44,6 @@ static float invSqrt(float x);
 void MadgwickAHRSetBeta(float beta_in) {
 	beta = beta_in;
 }
-
-
 
 //---------------------------------------------------------------------------------------------------
 // AHRS algorithm update
