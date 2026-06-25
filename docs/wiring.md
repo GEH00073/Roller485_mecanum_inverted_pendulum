@@ -1,29 +1,29 @@
-# Wiring
+# 配線
 
-## AtomS3 to Roller485
+## AtomS3R/AtomS3 と Roller485
 
-Connect the AtomS3 and four Roller485 units in parallel on PORT.A using Grove 4-wire cables.
+AtomS3R または AtomS3 の PORT.A に、4台の Roller485 を Grove 4線ケーブルで並列接続します。
 
-AtomS3 PORT.A signals:
+AtomS3R/AtomS3 の PORT.A 信号:
 
 - G7
 - G8
 - 5V
 - GND
 
-The four Roller485 units share the same I2C bus and are distinguished by address.
+4台の Roller485 は同じ I2C バスを共有し、I2C アドレスで識別します。
 
-## Roller485 Power
+## Roller485 の電源
 
-Supply 7.2 V and GND from the 7.2 V battery to each Roller485 PWR485 input.
+7.2 V バッテリーから、各 Roller485 の PWR485 入力へ 7.2 V と GND を供給します。
 
-## Roller485 Address Layout
+## Roller485 の配置と I2C アドレス
 
-- LEFT = left outer, addr 0x64
-- LEFT2 = left inner, addr 0x65
-- RIGHT2 = right inner, addr 0x66
-- RIGHT = right outer, addr 0x67
+- LEFT = 左外側、アドレス 0x64
+- LEFT2 = 左内側、アドレス 0x65
+- RIGHT2 = 右内側、アドレス 0x66
+- RIGHT = 右外側、アドレス 0x67
 
-## Controller Link
+## コントローラーとの通信
 
-The Atom JoyStick controller connects wirelessly to the AtomS3 receiver using ESP-NOW on channel 3.
+Atom JoyStick コントローラーと本体側 AtomS3R/AtomS3 は、ESP-NOW のチャンネル 3 で無線接続します。

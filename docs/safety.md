@@ -1,10 +1,10 @@
-# Safety
+# 安全上の注意
 
-An inverted pendulum can move suddenly. Keep enough free space around the robot and keep hands, cables, and tools away from the wheels while powered.
+倒立振子は電源投入後や制御開始時に突然動く可能性があります。通電中はロボットの周囲に十分な空間を確保し、手、ケーブル、工具などを車輪に近づけないでください。
 
-- Always test with the wheels lifted off the floor during first bring-up.
-- Make sure the area around the robot is clear before enabling control.
-- To prevent motion immediately after power-on, the receiver requires a valid ESP-NOW packet before motor startup.
-- Motors stop when ESP-NOW receive timeout is detected.
-- Motors stop when the tilt angle exceeds the fall-detection threshold.
-- If Roller485 initialization fails, the control task is not started.
+- 初回確認時は、必ず車輪を床から浮かせた状態でテストしてください。
+- 制御を有効にする前に、ロボットの周囲に人や障害物がないことを確認してください。
+- 電源投入直後に動き出さないよう、本体側は有効な ESP-NOW パケットを受信するまでモーターを起動しません。
+- ESP-NOW の受信タイムアウトを検出すると、モーターを停止します。
+- 傾き角が転倒検出しきい値を超えると、モーターを停止します。
+- Roller485 の初期化に失敗した場合、制御タスクは開始されません。
