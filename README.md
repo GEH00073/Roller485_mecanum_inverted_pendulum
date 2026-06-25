@@ -1,59 +1,71 @@
 # Roller485 Mecanum Inverted Pendulum
 
-Roller485 x 4 and 80 mm mecanum wheels are used to build a side-by-side inverted pendulum robot that can move laterally. This repository contains both the robot firmware and the Atom JoyStick controller firmware for the Transistor Technology article project.
+Roller485を4台と80 mmメカナムホイールを使った、横一列配置の倒立振子ロボットです。トランジスタ技術の記事連動用に、本体側ファームウェアとAtom JoyStickコントローラー側ファームウェアを1つのリポジトリにまとめています。
 
-## System
+## 構成
 
-- Robot: AtomS3 + Roller485 x 4
-- Controller: Atom JoyStick
-- Communication: ESP-NOW ch 3 broadcast
-- Drive power: 7.2 V battery to PWR485
-- Wheels: 80 mm mecanum wheels
+- 本体側: AtomS3 + Roller485 x 4
+- コントローラー側: Atom JoyStick
+- 通信: ESP-NOW ch 3 ブロードキャスト
+- 駆動電源: 7.2 V battery to PWR485
+- 車輪: 80 mmメカナムホイール
 
-## Directory Structure
+## ディレクトリ構成
 
-- `firmware/pendulum`: Robot firmware for AtomS3 + Roller485 x 4
-- `firmware/controller`: Atom JoyStick controller firmware
-- `docs`: Packet, wiring, and safety notes
-- `images`: Photos and figures for documentation
+- `firmware/pendulum`: AtomS3 + Roller485 x 4 の本体側ファームウェア
+- `firmware/controller`: Atom JoyStickコントローラー側ファームウェア
+- `docs`: ESP-NOWパケット、配線、安全注意の補足資料
+- `images`: 写真や図を置くためのディレクトリ
 
-## Safety Notes
+## 安全上の注意
 
-- Always test with the wheels lifted off the floor during first bring-up.
-- The robot motors do not start until a valid ESP-NOW packet is received.
-- Local button-only startup on the robot is disabled for safety.
-- Motors stop on fall detection and ESP-NOW receive timeout.
-- The inverted pendulum can move suddenly; keep enough free space around it.
+倒立振子は電源投入後や制御開始時に突然動く可能性があります。初回確認時は必ず車輪を浮かせ、周囲に十分な空間を確保してください。
 
-## Roller485 Layout
+- 初回確認時は必ず車輪を浮かせてテストしてください。
+- 本体側は、有効なESP-NOWパケットを受信するまでモーターを起動しません。
+- 本体ボタンだけでの単独起動は安全のため無効にしています。
+- 転倒検出時とESP-NOW受信タイムアウト時はモーターを停止します。
+- Roller485初期化に失敗した場合、制御タスクは開始されません。
+
+## Roller485の配置とI2Cアドレス
 
 - LEFT = left outer, addr 0x64
 - LEFT2 = left inner, addr 0x65
 - RIGHT2 = right inner, addr 0x66
 - RIGHT = right outer, addr 0x67
 
-## Build
+## ビルド方法
 
-Install PlatformIO, then build each firmware from its own directory.
+PlatformIOをインストールした環境で、それぞれのファームウェアディレクトリに移動してビルドします。リポジトリ直下ではなく、`firmware/pendulum` または `firmware/controller` をPlatformIOプロジェクトとして開いてください。
 
-Robot firmware:
+本体側ファームウェア:
 
 ```bash
 cd firmware/pendulum
 pio run
 ```
 
-Controller firmware:
+コントローラー側ファームウェア:
 
 ```bash
 cd firmware/controller
 pio run
 ```
 
-The checked-in `platformio.ini` files leave Wi-Fi credentials empty for public release. Set `WIFI_SSID`, `WIFI_PASSWORD`, and optional `OTA_PASSWORD` locally if OTA upload is needed.
+初回ビルド時は、PlatformIOがボード定義や依存ライブラリを取得するため、インターネット接続が必要です。
 
-## License
+## OTA設定について
 
-MIT License.
+公開用の `platformio.ini` では、Wi-Fi SSIDとパスワードは空文字にしています。OTA書き込みを使う場合は、各自の環境に合わせて `WIFI_SSID`, `WIFI_PASSWORD`, 必要に応じて `OTA_PASSWORD` を設定してください。
+
+## 関連ドキュメント
+
+- `docs/espnow_packet.md`: ESP-NOWパケット仕様
+- `docs/wiring.md`: AtomS3、Roller485、電源まわりの配線
+- `docs/safety.md`: 実験時の安全注意
+
+## ライセンス
+
+MIT Licenseです。
 
 Original code by Kouhei Ito. Modified by Atsushi Kataoka.
