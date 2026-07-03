@@ -4,6 +4,8 @@ Roller485を4台と80 mmメカナムホイールを使った、横一列配置�
 
 ![完成したメカナムホイール倒立振子](images/robot_overview.png)
 
+[動作動画を見る](https://youtu.be/hXI0RIIv_HM)
+
 ## 構成
 
 - 本体側: AtomS3R(またはAtomS3) + Roller485 x 4
