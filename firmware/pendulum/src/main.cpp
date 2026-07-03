@@ -466,6 +466,7 @@ void runStartupRollerCheckMode()
     M5.Display.println("CHECK DONE");
     Serial.println("Startup roller check finished.");
     waitWithM5Update(500);
+    M5.Display.clear(TFT_BLACK);
 }
 }  // namespace
 
