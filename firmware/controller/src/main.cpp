@@ -229,7 +229,7 @@ void setup()
   Serial1.begin(115200, SERIAL_8N1, 1, 2); // Grove atom_toio
   M5.update();
   setup_pwm_buzzer();
-  M5.Display.setRotation(2);
+  M5.Display.setRotation(0);
   M5.Display.setTextFont(2);
   M5.Display.setCursor(4, 2);
 
