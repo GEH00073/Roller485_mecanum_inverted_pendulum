@@ -9,12 +9,11 @@
 
 #include <Arduino.h>
 #include <ArduinoOTA.h>
-#include <M5AtomS3.h>
+#include <M5Unified.h>
 #include <WiFi.h>
 #include <esp_now.h>
 #include <esp_wifi.h>
 #include <cstring>
-#include <MPU6886.h>
 #include <atoms3joy.h>
 #include "buzzer.h"
 
@@ -129,12 +128,12 @@ void setupOTA()
 
   ArduinoOTA.begin();
   otaStarted = true;
-  M5.Lcd.fillScreen(BLUE);
-  M5.Lcd.setCursor(4, 8);
-  M5.Lcd.setTextColor(WHITE, BLUE);
-  M5.Lcd.println("OTA READY");
-  M5.Lcd.println(OTA_HOSTNAME);
-  M5.Lcd.println(WiFi.localIP().toString());
+  M5.Display.fillScreen(BLUE);
+  M5.Display.setCursor(4, 8);
+  M5.Display.setTextColor(WHITE, BLUE);
+  M5.Display.println("OTA READY");
+  M5.Display.println(OTA_HOSTNAME);
+  M5.Display.println(WiFi.localIP().toString());
   Serial.printf("OTA ready: %s.local IP: %s\n", OTA_HOSTNAME, WiFi.localIP().toString().c_str());
 }
 
@@ -148,12 +147,12 @@ void enableOTAMode()
   esp_now_deinit();
   WiFi.disconnect(false, true);
   lastOtaWifiAttemptMs = 0;
-  M5.Lcd.fillScreen(BLUE);
-  M5.Lcd.setCursor(4, 8);
-  M5.Lcd.setTextColor(WHITE, BLUE);
-  M5.Lcd.println("OTA MODE");
-  M5.Lcd.println("WiFi connecting");
-  M5.Lcd.println(OTA_HOSTNAME);
+  M5.Display.fillScreen(BLUE);
+  M5.Display.setCursor(4, 8);
+  M5.Display.setTextColor(WHITE, BLUE);
+  M5.Display.println("OTA MODE");
+  M5.Display.println("WiFi connecting");
+  M5.Display.println(OTA_HOSTNAME);
   Serial.println("OTA mode enabled. Upload by espota.");
 }
 
@@ -173,12 +172,12 @@ bool serviceOTAMode()
       lastOtaWifiAttemptMs = now;
       WiFi.mode(WIFI_STA);
       WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-      M5.Lcd.fillScreen(BLUE);
-      M5.Lcd.setCursor(4, 8);
-      M5.Lcd.setTextColor(WHITE, BLUE);
-      M5.Lcd.println("OTA MODE");
-      M5.Lcd.println("WiFi connecting");
-      M5.Lcd.println(WIFI_SSID);
+      M5.Display.fillScreen(BLUE);
+      M5.Display.setCursor(4, 8);
+      M5.Display.setTextColor(WHITE, BLUE);
+      M5.Display.println("OTA MODE");
+      M5.Display.println("WiFi connecting");
+      M5.Display.println(WIFI_SSID);
       Serial.printf("Connecting OTA WiFi: %s\n", WIFI_SSID);
     }
     return true;
@@ -230,21 +229,21 @@ void setup()
   Serial1.begin(115200, SERIAL_8N1, 1, 2); // Grove atom_toio
   M5.update();
   setup_pwm_buzzer();
-  M5.Lcd.setRotation(2);
-  M5.Lcd.setTextFont(2);
-  M5.Lcd.setCursor(4, 2);
+  M5.Display.setRotation(2);
+  M5.Display.setTextFont(2);
+  M5.Display.setCursor(4, 2);
 
   Channel = CHANNEL;
   rc_init();
   Serial.println("ESP-NOW broadcast mode. Pairing skipped.");
-  M5.Lcd.fillScreen(BLACK);
+  M5.Display.fillScreen(BLACK);
   joy_update();
 
   StickMode = 2;
   if (getOptionButton())
   {
     StickMode = 3;
-    M5.Lcd.println("Please release button.");
+    M5.Display.println("Please release button.");
     while (getOptionButton())
       joy_update();
   }
@@ -388,7 +387,7 @@ void loop()
     return;
   }
 
-  const bool otaButtonHeld = M5.Btn.isPressed() || getOptionButton();
+  const bool otaButtonHeld = M5.BtnA.isPressed() || getOptionButton();
   if (otaButtonHeld)
   {
     if (otaButtonHoldStartMs == 0)
@@ -409,7 +408,7 @@ void loop()
 
 
   // Stop Watch Start&Stop&Reset
-  if (M5.Btn.wasPressed() == true)
+  if (M5.BtnA.wasPressed() == true)
   {
     if (Timer_state == 0)
       Timer_state = 1;
@@ -417,7 +416,7 @@ void loop()
       Timer_state = 0;
   }
 
-  if (M5.Btn.pressedFor(400) == true)
+  if (M5.BtnA.pressedFor(400) == true)
   {
     Timer_state = 2;
   }
@@ -498,22 +497,22 @@ void loop()
   esp_err_t result = esp_now_send(peerInfo.peer_addr, senddata, kEspNowPacketSize);
   (void)result;
 
-  M5.Lcd.setTextSize(2);
-  M5.Lcd.setTextFont(0);
-  M5.Lcd.setCursor(8, 5 + disp_counter * 16);
+  M5.Display.setTextSize(2);
+  M5.Display.setTextFont(0);
+  M5.Display.setCursor(8, 5 + disp_counter * 16);
   switch (disp_counter)
   {
   case 0:
-    M5.Lcd.printf("V1 %2.2f ", Battery_voltage[1]);
+    M5.Display.printf("V1 %2.2f ", Battery_voltage[1]);
     break;
   case 1:
-    M5.Lcd.printf("CH %d ", CHANNEL);
+    M5.Display.printf("CH %d ", CHANNEL);
     break;
   case 2:
-    M5.Lcd.printf("DT %2.1f ", (float)ltime / 1000);
+    M5.Display.printf("DT %2.1f ", (float)ltime / 1000);
     break;
   case 3:
-    M5.Lcd.print("BC send ");
+    M5.Display.print("BC send ");
     break;
   }
   disp_counter++;

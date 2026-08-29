@@ -81,6 +81,23 @@ pio run
 
 ## ライセンス
 
-MIT Licenseです。
+このリポジトリは複数ライセンスの集合であり、リポジトリ全体をMIT Licenseとするものではありません。個別ファイルの表示と[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)を優先してください。ライセンス原文は[LICENSES](LICENSES)にあります。
+
+| 対象 | ライセンス／配布条件 | 備考 |
+| --- | --- | --- |
+| 伊藤恒平氏および片岡淳の独自コード（`firmware/*/src/main.cpp`、`firmware/controller/lib/ATOMS3Joy/`） | MIT | `LICENSES/MIT.txt`。伊藤氏の著作権を有する派生部分は、得たMIT条件の許諾に基づきます。 |
+| M5Stack Unit Roller I2Cドライバーおよびbuzzer（`firmware/pendulum/src/unit_rolleri2c.*`、`firmware/controller/src/buzzer.*`） | MIT（M5Stack） | M5Stackのファイル内SPDX表示を保持しています。伊藤氏の高速化改変を含みます。 |
+| MadgwickAHRS（`firmware/pendulum/src/MadgwickAHRS.*`） | GPL-3.0-only | Arduino版の上流が「GPL version 3」と明記しているためです。出典は第三者通知を参照してください。 |
+| 本体側完成ファームウェア（`firmware/pendulum`） | GPL-3.0-only | MITの個別コードとGPL-3.0-onlyのMadgwickAHRSを結合してビルドするため、完成ファームウェアのソース／バイナリ配布にはGPL-3.0-onlyが適用されます。 |
+| コントローラー側独自コード（`firmware/controller/src/`、`lib/ATOMS3Joy/`） | MIT | この行は独自コードだけを対象とします。 |
+| コントローラー完成ファームウェア | MITの独自コード + M5Unified/M5GFX と各上流通知 | M5UnifiedはMIT。M5GFXはMITに加え、実際にリンクされるLovyanGFX・フォント・画像処理部の通知があります。GPL、LGPL、CC BY-SA 3.0 の旧M5AtomS3同梱物は含みません。詳細は`THIRD_PARTY_NOTICES.md`を参照してください。 |
+| 文書、画像、3Dモデル（`docs/`、`images/`、`3d_models/`） | CC BY 4.0 | Copyright (c) 2026 Atsushi Kataoka。商用利用・再配布・改変を許可し、表示義務があります。`LICENSES/CC-BY-4.0.txt`を参照してください。 |
+
+`LICENSE` はライセンス案内です。MITの原文だけをルートに置いて全ファイルへ適用されるように見せないため、この構成にしています。
+
+```
+Copyright (c) 2024 Kouhei Ito
+Modifications Copyright (c) 2026 Atsushi Kataoka
 
 Original code by Kouhei Ito. Modified by Atsushi Kataoka.
+```

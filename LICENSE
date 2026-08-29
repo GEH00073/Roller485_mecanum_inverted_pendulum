@@ -1,21 +1,14 @@
-MIT License
+# License notice
 
-Copyright (c) 2024 Kouhei Ito
+This repository is a collection of components under different licenses.  It is
+not licensed as a whole under MIT.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+See `README.md` for the component-by-component license table,
+`THIRD_PARTY_NOTICES.md` for notices and upstream sources, and `LICENSES/` for
+the applicable license texts.  Individual source-file notices take precedence
+where present.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+The MIT grant for the identified Kouhei Ito and Atsushi Kataoka code is in
+`LICENSES/MIT.txt`.  The pendulum firmware binary/source distribution includes
+GPL-3.0-only MadgwickAHRS and is therefore distributed under GPL-3.0-only; see
+`LICENSES/GPL-3.0-only.txt`.

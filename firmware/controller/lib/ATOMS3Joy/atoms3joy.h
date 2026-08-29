@@ -3,8 +3,8 @@
 
 #ifndef ATOMS3JOY_H
 #define ATOMS3JOY_H
+#include <Arduino.h>
 #include <stdint.h>
-#include <M5AtomS3.h>
 
 #define I2C_ADDRESS (0x59)
 #define LEFT_STICK_X_ADDRESS (0x00)

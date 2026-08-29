@@ -1,6 +1,7 @@
 MIT License
 
-Copyright (c) 2022 M5Stack
+Copyright (c) 2024 Kouhei Ito
+Modifications Copyright (c) 2026 Atsushi Kataoka
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
